@@ -24,6 +24,25 @@ for script in "$repo_dir"/scripts/*.sh; do
 done
 printf 'ok - shell syntax\n'
 
+codex_pre_tool_status() {
+  payload=
+  while IFS= read -r line || [ -n "$line" ]; do
+    payload=$payload$line
+  done
+
+  tool_name=${payload#*\"tool_name\"}
+  if [ "$tool_name" != "$payload" ]; then
+    tool_name=${tool_name#*:}
+    tool_name=${tool_name#*\"}
+    tool_name=${tool_name%%\"*}
+  fi
+
+  case "$tool_name" in
+    request_user_input) printf 'question' ;;
+    *) printf 'busy' ;;
+  esac
+}
+
 assert_eq "codex" "$("$repo_dir/scripts/effective-command.sh" "" "codex-something" agent)" "codex fallback"
 assert_eq "claude" "$("$repo_dir/scripts/effective-command.sh" "" "1.2.3" agent)" "claude version fallback"
 assert_eq "" "$("$repo_dir/scripts/effective-command.sh" "" "zsh" label)" "shell fallback hidden"
@@ -39,6 +58,14 @@ assert_eq "~/p/mics-tmux:codex 󰔟" \
 assert_eq "~/p/mics-tmux:codex" \
   "$(HOME=/Users/mics "$repo_dir/scripts/window-label.sh" /Users/mics/projects/mics-tmux codex busy "" "" claude)" \
   "stale owner status hidden"
+
+assert_eq "question" \
+  "$(printf '{"tool_name":"request_user_input"}' | codex_pre_tool_status)" \
+  "codex question pre-tool status"
+
+assert_eq "busy" \
+  "$(printf '{"tool_name":"exec_command"}' | codex_pre_tool_status)" \
+  "codex generic pre-tool status"
 
 "$repo_dir/scripts/agent-status.sh" --help >/dev/null
 printf 'ok - agent-status help\n'
