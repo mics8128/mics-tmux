@@ -5,15 +5,22 @@ window label reflects the current agent state.
 
 ## Event-to-Status Mapping
 
-| Hook Event          | Status     | When it fires                                  |
-|---------------------|------------|------------------------------------------------|
-| `UserPromptSubmit`  | `busy`     | User submits a prompt; agent starts working.   |
-| `PermissionRequest` | `auth`     | Agent requests tool permission.                |
-| `Notification`      | `question` | Agent is idle, waiting for user input.         |
-| `Stop`              | `done`     | Agent finishes responding to the current turn. |
-| `StopFailure`       | `blocked`  | Stop hook failed; agent cannot continue.       |
-| `SessionStart`      | `clear`    | New session begins; reset stale status.        |
-| `SessionEnd`        | `clear`    | Session ends (Claude exits); clear status.     |
+| Hook Event          | Matcher          | Status     | When it fires                                       |
+|---------------------|------------------|------------|-----------------------------------------------------|
+| `UserPromptSubmit`  | (any)            | `busy`     | User submits a prompt; agent starts working.        |
+| `PermissionRequest` | (any, filtered†) | `auth`     | Agent requests tool permission.                     |
+| `PermissionDenied`  | (any)            | `blocked`  | User denied permission; agent cannot proceed.       |
+| `PreToolUse`        | `AskUserQuestion`| `question` | Agent is about to ask the user a question.          |
+| `Notification`      | (any)            | `question` | Agent is idle, waiting for user input.              |
+| `PostToolUse`       | (any)            | `busy`     | Tool finished; agent resumes work.                  |
+| `Stop`              | (any)            | `done`     | Agent finishes responding to the current turn.      |
+| `StopFailure`       | (any)            | `blocked`  | Stop hook failed; agent cannot continue.            |
+| `SessionStart`      | (any)            | `clear`    | New session begins; reset stale status.             |
+| `SessionEnd`        | (any)            | `clear`    | Session ends (Claude exits); clear status.          |
+
+† `PermissionRequest` checks `tool_name` from stdin and skips `AskUserQuestion`,
+otherwise the lock icon would briefly flash before the question icon. The
+`PreToolUse` hook matched on `AskUserQuestion` then sets the question icon.
 
 ## settings.json
 
@@ -38,7 +45,38 @@ the `hooks` block with anything already in your settings — do not replace.
         "hooks": [
           {
             "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh auth >/dev/null 2>&1 || true"
+            "command": "{ t=$(jq -r '.tool_name // empty'); [ \"$t\" != \"AskUserQuestion\" ] && ~/.mics-tmux/scripts/agent-status.sh auth; } >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh blocked >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh question >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
           }
         ]
       }
@@ -99,6 +137,18 @@ the `hooks` block with anything already in your settings — do not replace.
 
 Each command is suffixed with `>/dev/null 2>&1 || true` so it fails silently
 when Claude Code is launched outside a tmux session.
+
+## Claude-Specific Quirks
+
+- **Lock flashes before a question.** `AskUserQuestion` triggers
+  `PermissionRequest` first, briefly showing the lock before the question
+  icon appears. The `PermissionRequest` command above reads `tool_name`
+  from stdin and skips `AskUserQuestion` so the lock no longer flashes.
+- **Permission denial does not fire `PostToolUse`.** When the user denies
+  a tool, the tool never runs, so the usual "tool finished → busy"
+  recovery never happens. Without a `PermissionDenied` hook the icon
+  stays on `auth`. The hook above maps `PermissionDenied` to `blocked` so
+  it's clear the agent was stopped.
 
 ## Apply Changes
 

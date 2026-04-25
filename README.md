@@ -120,6 +120,19 @@ Example labels:
 ~/p/mics-tmux:codex 󰄬
 ```
 
+### Pitfalls When Wiring a New Runner
+
+These apply to any agent runner; runner-specific quirks live in
+`reference/<runner>.md`.
+
+- **Transient states need a recovery hook.** Setting `auth` or `question`
+  only fires when the agent enters that state. If nothing fires on the way
+  out, the icon stays stuck. Pair every transient hook with a "tool
+  finished" hook that resets to `busy`.
+- **Always clear on session end.** Without a session-end hook calling
+  `clear`, the last status (usually `done`) sticks on the window after the
+  agent exits.
+
 Per-runner setup notes live under `reference/`. For Claude Code, see
 [`reference/claude.md`](reference/claude.md) — it contains a complete
 `settings.json` example wiring all lifecycle events to `agent-status.sh`.
