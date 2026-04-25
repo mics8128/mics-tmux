@@ -35,7 +35,7 @@ short_path=$(printf '%s\n' "$path" | awk '
     }
 
     if (i < n) {
-      part = substr(part, 1, 1)
+      part = substr(part, 1, substr(part, 1, 1) == "." ? 2 : 1)
     }
 
     if (out == "" || out == "/") {

@@ -68,13 +68,17 @@ Examples:
 
 ```text
 ~/p/mics-tmux:codex
+~/.p/f/project
+/p/v/f/project
 ~/Downloads
 ~/a/b/c/project:nvim(build)
 ```
 
 The path shortener keeps `~`, abbreviates intermediate folders to one character,
-and keeps the final folder name intact. Shell commands such as `zsh`, `bash`,
-`fish`, and `sh` are omitted. `codex-*` commands are shown as `codex`.
+abbreviates hidden intermediate folders to two characters such as `.p`, and
+keeps only the final folder name intact.
+Shell commands such as `zsh`, `bash`, `fish`, and `sh` are omitted. `codex-*`
+commands are shown as `codex`.
 
 ## Agent Status Hook
 
