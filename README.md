@@ -112,3 +112,7 @@ Example labels:
 ~/p/mics-tmux:codex 󰅖
 ~/p/mics-tmux:codex 󰄬
 ```
+
+Per-runner setup notes live under `reference/`. For Claude Code, see
+[`reference/claude.md`](reference/claude.md) — it contains a complete
+`settings.json` example wiring all lifecycle events to `agent-status.sh`.
