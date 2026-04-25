@@ -24,116 +24,12 @@ otherwise the lock icon would briefly flash before the question icon. The
 
 ## settings.json
 
-Add to `~/.claude/settings.json` (user-level, applies to all projects). Merge
-the `hooks` block with anything already in your settings — do not replace.
+Add the `hooks` block from [`claude.settings.json`](claude.settings.json) to
+`~/.claude/settings.json` (user-level, applies to all projects). Merge it with
+anything already in your settings; do not replace unrelated settings.
 
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "{ t=$(jq -r '.tool_name // empty'); [ \"$t\" != \"AskUserQuestion\" ] && ~/.mics-tmux/scripts/agent-status.sh auth; } >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "PermissionDenied": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh blocked >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh question >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh question >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh done >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "StopFailure": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh blocked >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh clear >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh clear >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+The example file is intentionally separate from this explanation so
+`scripts/test.sh` can parse and smoke-test it.
 
 Each command is suffixed with `>/dev/null 2>&1 || true` so it fails silently
 when Claude Code is launched outside a tmux session.
@@ -143,7 +39,8 @@ when Claude Code is launched outside a tmux session.
 - **Lock flashes before a question.** `AskUserQuestion` triggers
   `PermissionRequest` first, briefly showing the lock before the question
   icon appears. The `PermissionRequest` command above reads `tool_name`
-  from stdin and skips `AskUserQuestion` so the lock no longer flashes.
+  from stdin with POSIX shell parameter expansion and skips
+  `AskUserQuestion` so the lock no longer flashes.
 - **Permission denial does not fire `PostToolUse`.** When the user denies
   a tool, the tool never runs, so the usual "tool finished → busy"
   recovery never happens. Without a `PermissionDenied` hook the icon

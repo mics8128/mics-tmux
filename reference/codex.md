@@ -20,89 +20,20 @@ label reflects the current Codex state.
 
 ## config.toml
 
-Enable Codex hooks in `~/.codex/config.toml`:
-
-```toml
-[features]
-codex_hooks = true
-```
+Enable Codex hooks in `~/.codex/config.toml`. The minimal example is
+[`codex.config.toml`](codex.config.toml).
 
 Merge the feature with any existing `[features]` table. Do not duplicate the
 table.
 
 ## hooks.json
 
-Add to `~/.codex/hooks.json` (user-level, applies to all projects). Merge the
-`hooks` block with anything already in the file.
+Add the `hooks` block from [`codex.hooks.json`](codex.hooks.json) to
+`~/.codex/hooks.json` (user-level, applies to all projects). Merge it with
+anything already in the file.
 
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/mics/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/mics/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh -c 'p=; while IFS= read -r line || [ -n \"$line\" ]; do p=$p$line; done; t=${p#*\\\"tool_name\\\"}; if [ \"$t\" != \"$p\" ]; then t=${t#*:}; t=${t#*\\\"}; t=${t%%\\\"*}; fi; case \"$t\" in request_user_input) s=question ;; *) s=busy ;; esac; /Users/mics/.mics-tmux/scripts/agent-status.sh \"$s\" >/dev/null 2>&1 || true'"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/mics/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/mics/.mics-tmux/scripts/agent-status.sh auth >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/mics/.mics-tmux/scripts/agent-status.sh done >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+The example file is intentionally separate from this explanation so
+`scripts/test.sh` can parse and smoke-test it.
 
 Each command is suffixed with `>/dev/null 2>&1 || true` so it fails silently
 when Codex is launched outside a tmux session.

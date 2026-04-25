@@ -3,8 +3,16 @@
 pane_pid=${1:-}
 fallback_cmd=${2:-}
 mode=${3:-label}
+cache_dir=${MICS_TMUX_CACHE_DIR:-${TMPDIR:-/tmp}/mics-tmux}
 
 process_cmd=
+cache_key=$(printf '%s\n%s\n%s\n' "$mode" "$pane_pid" "$fallback_cmd" | cksum | awk '{print $1}')
+cache_file="$cache_dir/effective-command-$cache_key"
+
+if [ -r "$cache_file" ]; then
+  cat "$cache_file" 2>/dev/null || true
+  exit 0
+fi
 
 if [ -n "$pane_pid" ]; then
   process_cmd=$(ps -axo pid=,ppid=,args= 2>/dev/null | awk -v pane_pid="$pane_pid" -v mode="$mode" '
@@ -61,5 +69,10 @@ case "$cmd" in
   [0-9]*.[0-9]*.[0-9]*) cmd=claude ;;
   zsh|bash|fish|sh) cmd= ;;
 esac
+
+if mkdir -p "$cache_dir" 2>/dev/null; then
+  tmp_file="$cache_file.$$"
+  printf '%s' "$cmd" > "$tmp_file" 2>/dev/null && mv "$tmp_file" "$cache_file" 2>/dev/null || true
+fi
 
 printf '%s' "$cmd"

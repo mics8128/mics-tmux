@@ -1,0 +1,105 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'p=; while IFS= read -r line || [ -n \"$line\" ]; do p=$p$line; done; t=${p#*\\\"tool_name\\\"}; if [ \"$t\" != \"$p\" ]; then t=${t#*:}; t=${t#*\\\"}; t=${t%%\\\"*}; fi; [ \"$t\" = AskUserQuestion ] && exit 0; ~/.mics-tmux/scripts/agent-status.sh auth' >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh blocked >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh question >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh question >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh done >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh blocked >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh clear >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.mics-tmux/scripts/agent-status.sh clear >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
+}

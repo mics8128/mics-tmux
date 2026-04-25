@@ -141,7 +141,9 @@ These apply to any agent runner; runner-specific quirks live in
 
 Per-runner setup notes live under `reference/`. For Claude Code, see
 [`reference/claude.md`](reference/claude.md) — it contains a complete
-`settings.json` example wiring all lifecycle events to `agent-status.sh`.
+settings explanation plus [`reference/claude.settings.json`](reference/claude.settings.json)
+for the hook example.
 For Codex, see [`reference/codex.md`](reference/codex.md) — it documents
 `~/.codex/config.toml`, `~/.codex/hooks.json`, and the `request_user_input`
-question-tool hook.
+question-tool hook, with examples in [`reference/codex.config.toml`](reference/codex.config.toml)
+and [`reference/codex.hooks.json`](reference/codex.hooks.json).
