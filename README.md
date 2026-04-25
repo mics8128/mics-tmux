@@ -1,7 +1,12 @@
 # mics-tmux
 
-Personal tmux configuration for macOS. The config is intended to live at
-`~/.mics-tmux` and be linked from `~/.tmux.conf`.
+Personal tmux configuration. It is intended to live at `~/.mics-tmux` and be
+linked from `~/.tmux.conf`.
+
+The config is used primarily on macOS. The helper scripts stick to POSIX shell
+and common Unix tools where possible, so most behavior should also work on
+Linux or WSL. The battery indicator uses macOS `pmset`; on systems without it,
+the battery segment is simply omitted.
 
 ## Install
 
@@ -12,23 +17,21 @@ tmux source-file ~/.tmux.conf
 tpack install
 ```
 
-If `~/.tmux.conf` already exists and is not a symlink, back it up before linking.
+If `~/.tmux.conf` already exists and is not a symlink, back it up before
+linking.
 
-Agent status integration is not installed until the agent runner has mandatory
-lifecycle hooks configured to call `~/.mics-tmux/scripts/agent-status.sh`.
-Prompt text and skills are advisory mechanisms only and do not count as
-installation for agent status updates.
+Runtime requirements:
 
-## Test
-
-```sh
-scripts/test.sh
-```
+- `tmux`
+- `tpack`
+- POSIX `sh` plus common Unix tools such as `awk`, `sed`, `cut`, `cksum`,
+  `date`, `ps`, and `uptime`
+- A Nerd Font in the terminal for status icons
 
 ## Font Requirement
 
-The status bar uses Nerd Font icons for load, battery, time, and agent pane status. Before enabling
-or changing those icons, confirm the terminal font is a Nerd Font, such as:
+The status bar uses Nerd Font icons for load, battery, time, and agent pane
+status. Use a Nerd Font such as:
 
 - JetBrainsMono Nerd Font
 - Hack Nerd Font
@@ -60,7 +63,11 @@ Ctrl-b x      confirm and kill pane
 Ctrl-b X      confirm and kill window
 ```
 
-## Window Labels
+## Status Bar
+
+The right side shows load, battery, and time. It is rendered by
+`scripts/status-right.sh` and cached per minute, so time updates shortly after
+the minute changes while avoiding repeated battery/load probes.
 
 Window labels are rendered by `scripts/window-label.sh`.
 
@@ -82,20 +89,21 @@ Examples:
 
 The path shortener keeps `~`, abbreviates intermediate folders to one character,
 abbreviates hidden intermediate folders to two characters such as `.p`, and
-keeps only the final folder name intact.
-Shell commands such as `zsh`, `bash`, `fish`, and `sh` are omitted. `codex-*`
-commands are shown as `codex`.
+keeps only the final folder name intact. Shell commands such as `zsh`, `bash`,
+`fish`, and `sh` are omitted. `codex-*` commands are shown as `codex`.
 
-## Agent Status Hook
+## Agent Status
 
-Agent status must be updated by mandatory lifecycle hooks from the agent runner.
-Run the hook inside the agent process environment so `TMUX_PANE` points to the
-pane that owns the agent. The helper stores status on that pane, and the tab
-label renders the active pane status. If `TMUX_PANE` is missing, it refuses to
-update anything. Do not rely on prompts or skills to
-remember to update status; those are advisory and can be skipped by the agent.
+Agent status integration is optional. It is not installed until the agent runner
+has mandatory lifecycle hooks configured to call
+`~/.mics-tmux/scripts/agent-status.sh`.
 
-Configure runner hooks to call `scripts/agent-status.sh`:
+Run hooks inside the agent process environment so `TMUX_PANE` points to the pane
+that owns the agent. The helper stores status on that pane, and the tab label
+renders the active pane status. If `TMUX_PANE` is missing, it refuses to update
+anything.
+
+Configure runner hooks to call:
 
 ```sh
 ~/.mics-tmux/scripts/agent-status.sh busy
@@ -106,7 +114,7 @@ Configure runner hooks to call `scripts/agent-status.sh`:
 ~/.mics-tmux/scripts/agent-status.sh clear
 ```
 
-Hook points should map to user-visible agent states:
+Statuses:
 
 ```text
 busy      󰔟  actively working
@@ -114,6 +122,7 @@ auth      󰌾  needs user approval or permission
 question  󰋗  needs the user to answer a question
 blocked   󰅖  cannot continue without external action
 done      󰄬  finished the current task
+clear        remove the pane status
 ```
 
 Example labels:
@@ -126,24 +135,25 @@ Example labels:
 ~/p/mics-tmux:codex 󰄬
 ```
 
-### Pitfalls When Wiring a New Runner
+Runner-specific setup:
 
-These apply to any agent runner; runner-specific quirks live in
-`reference/<runner>.md`.
+- Claude Code: [`reference/claude.md`](reference/claude.md), with example
+  hooks in [`reference/claude.settings.json`](reference/claude.settings.json)
+- Codex: [`reference/codex.md`](reference/codex.md), with examples in
+  [`reference/codex.config.toml`](reference/codex.config.toml) and
+  [`reference/codex.hooks.json`](reference/codex.hooks.json)
 
-- **Transient states need a recovery hook.** Setting `auth` or `question`
-  only fires when the agent enters that state. If nothing fires on the way
-  out, the icon stays stuck. Pair every transient hook with a "tool
-  finished" hook that resets to `busy`.
-- **Always clear on session end.** Without a session-end hook calling
-  `clear`, the last status (usually `done`) sticks on the window after the
-  agent exits.
+## Updating
 
-Per-runner setup notes live under `reference/`. For Claude Code, see
-[`reference/claude.md`](reference/claude.md) — it contains a complete
-settings explanation plus [`reference/claude.settings.json`](reference/claude.settings.json)
-for the hook example.
-For Codex, see [`reference/codex.md`](reference/codex.md) — it documents
-`~/.codex/config.toml`, `~/.codex/hooks.json`, and the `request_user_input`
-question-tool hook, with examples in [`reference/codex.config.toml`](reference/codex.config.toml)
-and [`reference/codex.hooks.json`](reference/codex.hooks.json).
+```sh
+cd ~/.mics-tmux
+git pull
+tmux source-file ~/.tmux.conf
+```
+
+Restart Claude Code or Codex after changing their hook settings.
+
+## Development
+
+Development notes, test coverage, and reference-example maintenance rules live
+in [`DEVELOPMENT.md`](DEVELOPMENT.md).
