@@ -14,9 +14,14 @@ tpack install
 
 If `~/.tmux.conf` already exists and is not a symlink, back it up before linking.
 
+Agent status integration is not installed until the agent runner has mandatory
+lifecycle hooks configured to call `~/.mics-tmux/scripts/agent-status.sh`.
+Prompt text and skills are advisory mechanisms only and do not count as
+installation for agent status updates.
+
 ## Font Requirement
 
-The status bar uses Nerd Font icons for load, battery, and time. Before enabling
+The status bar uses Nerd Font icons for load, battery, time, and agent window status. Before enabling
 or changing those icons, confirm the terminal font is a Nerd Font, such as:
 
 - JetBrainsMono Nerd Font
@@ -56,7 +61,7 @@ Window labels are rendered by `scripts/window-label.sh`.
 The label format is:
 
 ```text
-short/path[:command][(status)]
+short/path[:command][ status-icon|(custom)]
 ```
 
 Examples:
@@ -73,38 +78,37 @@ and keeps the final folder name intact. Shell commands such as `zsh`, `bash`,
 
 ## Agent Status Hook
 
-Agents can update the active tmux window label by setting the window-scoped
-`@mics_window_status` option.
+Agent status must be updated by mandatory lifecycle hooks from the agent runner.
+Do not rely on prompts or skills to remember to update status; those are
+advisory and can be skipped by the agent.
+
+Configure runner hooks to call `scripts/agent-status.sh`:
 
 ```sh
-tmux set-option -wq @mics_window_status "running"
-tmux refresh-client -S
+~/.mics-tmux/scripts/agent-status.sh busy
+~/.mics-tmux/scripts/agent-status.sh auth
+~/.mics-tmux/scripts/agent-status.sh question
+~/.mics-tmux/scripts/agent-status.sh blocked
+~/.mics-tmux/scripts/agent-status.sh done
+~/.mics-tmux/scripts/agent-status.sh clear
 ```
 
-Clear it with:
-
-```sh
-tmux set-option -uw @mics_window_status
-tmux refresh-client -S
-```
-
-Suggested status values:
+Hook points should map to user-visible agent states:
 
 ```text
-plan
-coding
-test
-review
-blocked
-done
+busy      󰔟  actively working
+auth      󰌾  needs user approval or permission
+question  󰋗  needs the user to answer a question
+blocked   󰅖  cannot continue without external action
+done      󰄬  finished the current task
 ```
 
 Example labels:
 
 ```text
-~/p/mics-tmux:codex(plan)
-~/p/mics-tmux:codex(coding)
-~/p/mics-tmux:codex(test)
-~/p/mics-tmux:codex(blocked)
-~/p/mics-tmux:codex(done)
+~/p/mics-tmux:codex 󰔟
+~/p/mics-tmux:codex 󰌾
+~/p/mics-tmux:codex 󰋗
+~/p/mics-tmux:codex 󰅖
+~/p/mics-tmux:codex 󰄬
 ```
