@@ -4,9 +4,15 @@ path=$1
 cmd=$2
 status=$3
 pane_pid=${4:-}
+pane_id=${5:-}
+status_owner=${6:-}
 
 if [ "$status" = "__mics_empty_status__" ]; then
   status=
+fi
+
+if [ "$status_owner" = "__mics_empty_owner__" ]; then
+  status_owner=
 fi
 
 case "$status:$pane_pid" in
@@ -132,6 +138,14 @@ case "$cmd" in
   [0-9]*.[0-9]*.[0-9]*) cmd=claude ;;
   zsh|bash|fish|sh) cmd= ;;
 esac
+
+if [ -n "$status" ] && [ -n "$status_owner" ] && [ "$status_owner" != "$cmd" ]; then
+  if [ -n "$pane_id" ]; then
+    tmux set-option -pq -u -t "$pane_id" @mics_pane_status 2>/dev/null || true
+    tmux set-option -pq -u -t "$pane_id" @mics_pane_status_owner 2>/dev/null || true
+  fi
+  status=
+fi
 
 label=$short_path
 
