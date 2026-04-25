@@ -36,4 +36,8 @@ else
   icon="󰂃"
 fi
 
-printf '%s %s%%' "$icon" "$percent"
+if [ "$percent" -le 20 ]; then
+  printf '#[fg=colour203]%s %s%%#[fg=colour244]' "$icon" "$percent"
+else
+  printf '%s %s%%' "$icon" "$percent"
+fi

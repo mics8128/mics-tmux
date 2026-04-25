@@ -164,7 +164,7 @@ While Claude is working, the current tmux window label should pick up the
 agent icon. Check the raw window option directly:
 
 ```sh
-tmux show-option -wv @mics_window_status
+tmux show-option -pt "$TMUX_PANE" -v @mics_pane_status
 ```
 
 Expected values: `busy`, `auth`, `question`, `blocked`, `done`, or unset

@@ -33,61 +33,9 @@ target_pane() {
 effective_command() {
   pane_pid=$1
   fallback_cmd=$2
+  script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
-  if [ -n "$pane_pid" ]; then
-    process_cmd=$(ps -axo pid=,ppid=,args= 2>/dev/null | awk -v pane_pid="$pane_pid" '
-      {
-        pid = $1
-        parent[pid] = $2
-        args = ""
-        for (i = 3; i <= NF; i++) {
-          args = args (args == "" ? "" : " ") $i
-        }
-        process_args[pid] = args
-      }
-
-      function descendant_of_pane(pid) {
-        while (pid in parent) {
-          if (parent[pid] == pane_pid) return 1
-          pid = parent[pid]
-        }
-        return 0
-      }
-
-      function matches(args, name) {
-        return args ~ "(^|[[:space:]])" name "([[:space:]]|$)" || args ~ "/" name "([[:space:]]|$)"
-      }
-
-      END {
-        for (pid in process_args) {
-          if (!descendant_of_pane(pid)) continue
-          args = process_args[pid]
-          if (matches(args, "claude")) {
-            print "claude"
-            exit
-          }
-        }
-        for (pid in process_args) {
-          if (!descendant_of_pane(pid)) continue
-          args = process_args[pid]
-          if (matches(args, "codex")) {
-            print "codex"
-            exit
-          }
-        }
-      }
-    ')
-  fi
-
-  cmd=${process_cmd:-$fallback_cmd}
-
-  case "$cmd" in
-    codex*) cmd=codex ;;
-    [0-9]*.[0-9]*.[0-9]*) cmd=claude ;;
-    zsh|bash|fish|sh) cmd= ;;
-  esac
-
-  printf '%s' "$cmd"
+  "$script_dir/effective-command.sh" "$pane_pid" "$fallback_cmd" agent
 }
 
 case "$status" in

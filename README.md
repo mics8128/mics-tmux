@@ -19,6 +19,12 @@ lifecycle hooks configured to call `~/.mics-tmux/scripts/agent-status.sh`.
 Prompt text and skills are advisory mechanisms only and do not count as
 installation for agent status updates.
 
+## Test
+
+```sh
+scripts/test.sh
+```
+
 ## Font Requirement
 
 The status bar uses Nerd Font icons for load, battery, time, and agent pane status. Before enabling

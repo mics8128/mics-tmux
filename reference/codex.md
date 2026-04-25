@@ -9,7 +9,6 @@ label reflects the current Codex state.
 |--------------------|----------------------|------------|------------------------------------------------|
 | `SessionStart`     | (any)                | `busy`     | Codex session starts.                          |
 | `UserPromptSubmit` | (any)                | `busy`     | User submits a prompt; agent starts working.   |
-| `PreToolUse`       | `.*`                 | `busy`     | Codex is about to run a tool.                  |
 | `PreToolUse`       | `request_user_input` | `question` | Codex is about to show the question UI.        |
 | `PostToolUse`      | `.*`                 | `busy`     | Tool finished; agent resumes work.             |
 | `PermissionRequest`| (any)                | `auth`     | Codex requests user approval or permission.    |
@@ -59,15 +58,6 @@ Add to `~/.codex/hooks.json` (user-level, applies to all projects). Merge the
       }
     ],
     "PreToolUse": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/mics/.mics-tmux/scripts/agent-status.sh busy >/dev/null 2>&1 || true"
-          }
-        ]
-      },
       {
         "matcher": "request_user_input",
         "hooks": [
@@ -120,6 +110,8 @@ when Codex is launched outside a tmux session.
 
 - **Question prompts are tools.** Codex questions use the `request_user_input`
   tool, so the question icon is driven by a `PreToolUse` matcher.
+- **Generic `PreToolUse` is not used for `busy`.** Normal work starts at
+  `UserPromptSubmit` and recovers after tools through `PostToolUse`.
 - **Permission prompts are separate.** Approval prompts use `PermissionRequest`
   and should stay mapped to `auth`.
 - **Question state needs recovery.** `PostToolUse` resets to `busy` after the
