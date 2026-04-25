@@ -3,6 +3,18 @@
 path=$1
 cmd=$2
 status=$3
+pane_pid=${4:-}
+
+if [ "$status" = "__mics_empty_status__" ]; then
+  status=
+fi
+
+case "$status:$pane_pid" in
+  [0-9]*:)
+    pane_pid=$status
+    status=
+    ;;
+esac
 
 short_path=$(printf '%s\n' "$path" | awk '
 {
@@ -48,8 +60,76 @@ short_path=$(printf '%s\n' "$path" | awk '
   print out
 }')
 
+process_cmd=
+
+if [ -n "$pane_pid" ]; then
+  process_cmd=$(ps -axo pid=,ppid=,args= 2>/dev/null | awk -v pane_pid="$pane_pid" '
+    {
+      pid = $1
+      parent[pid] = $2
+      args = ""
+      for (i = 3; i <= NF; i++) {
+        args = args (args == "" ? "" : " ") $i
+      }
+      process_args[pid] = args
+    }
+
+    function descendant_of_pane(pid) {
+      while (pid in parent) {
+        if (parent[pid] == pane_pid) return 1
+        pid = parent[pid]
+      }
+      return 0
+    }
+
+    function matches(args, name) {
+      return args ~ "(^|[[:space:]])" name "([[:space:]]|$)" || args ~ "/" name "([[:space:]]|$)"
+    }
+
+    END {
+      for (pid in process_args) {
+        if (!descendant_of_pane(pid)) continue
+        args = process_args[pid]
+        if (matches(args, "claude")) {
+          print "claude"
+          exit
+        }
+      }
+      for (pid in process_args) {
+        if (!descendant_of_pane(pid)) continue
+        args = process_args[pid]
+        if (matches(args, "codex")) {
+          print "codex"
+          exit
+        }
+      }
+      for (pid in process_args) {
+        if (!descendant_of_pane(pid)) continue
+        args = process_args[pid]
+        if (matches(args, "nvim")) {
+          print "nvim"
+          exit
+        }
+      }
+      for (pid in process_args) {
+        if (!descendant_of_pane(pid)) continue
+        args = process_args[pid]
+        if (matches(args, "vim")) {
+          print "vim"
+          exit
+        }
+      }
+    }
+  ')
+fi
+
+if [ -n "$process_cmd" ]; then
+  cmd=$process_cmd
+fi
+
 case "$cmd" in
   codex*) cmd=codex ;;
+  [0-9]*.[0-9]*.[0-9]*) cmd=claude ;;
   zsh|bash|fish|sh) cmd= ;;
 esac
 
