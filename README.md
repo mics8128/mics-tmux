@@ -11,10 +11,16 @@ the battery segment is simply omitted.
 ## Install
 
 ```sh
-git clone <repo-url> ~/.mics-tmux
+git clone https://github.com/mics8128/mics-tmux.git ~/.mics-tmux
 ln -sfn ~/.mics-tmux/tmux.conf ~/.tmux.conf
 tmux source-file ~/.tmux.conf
 tpack install
+```
+
+To have an agent install it for you, copy this prompt into that agent:
+
+```text
+Install mics-tmux by reading and following https://raw.githubusercontent.com/mics8128/mics-tmux/master/AGENT_INSTALL_INSTRUCTIONS.md
 ```
 
 If `~/.tmux.conf` already exists and is not a symlink, back it up before
