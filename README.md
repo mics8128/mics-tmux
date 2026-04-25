@@ -21,7 +21,7 @@ installation for agent status updates.
 
 ## Font Requirement
 
-The status bar uses Nerd Font icons for load, battery, time, and agent window status. Before enabling
+The status bar uses Nerd Font icons for load, battery, time, and agent pane status. Before enabling
 or changing those icons, confirm the terminal font is a Nerd Font, such as:
 
 - JetBrainsMono Nerd Font
@@ -79,8 +79,11 @@ and keeps the final folder name intact. Shell commands such as `zsh`, `bash`,
 ## Agent Status Hook
 
 Agent status must be updated by mandatory lifecycle hooks from the agent runner.
-Do not rely on prompts or skills to remember to update status; those are
-advisory and can be skipped by the agent.
+Run the hook inside the agent process environment so `TMUX_PANE` points to the
+pane that owns the agent. The helper stores status on that pane, and the tab
+label renders the active pane status. If `TMUX_PANE` is missing, it refuses to
+update anything. Do not rely on prompts or skills to
+remember to update status; those are advisory and can be skipped by the agent.
 
 Configure runner hooks to call `scripts/agent-status.sh`:
 
