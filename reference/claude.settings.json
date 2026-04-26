@@ -51,16 +51,6 @@
         ]
       }
     ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.mics-tmux/scripts/agent-status.sh question >/dev/null 2>&1 || true"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [

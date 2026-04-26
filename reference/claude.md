@@ -11,7 +11,6 @@ window label reflects the current agent state.
 | `PermissionRequest` | (any, filtered†) | `auth`     | Agent requests tool permission.                     |
 | `PermissionDenied`  | (any)            | `blocked`  | User denied permission; agent cannot proceed.       |
 | `PreToolUse`        | `AskUserQuestion`| `question` | Agent is about to ask the user a question.          |
-| `Notification`      | (any)            | `question` | Agent is idle, waiting for user input.              |
 | `PostToolUse`       | (any)            | `busy`     | Tool finished; agent resumes work.                  |
 | `Stop`              | (any)            | `done`     | Agent finishes responding to the current turn.      |
 | `StopFailure`       | (any)            | `blocked`  | Stop hook failed; agent cannot continue.            |
@@ -46,6 +45,14 @@ when Claude Code is launched outside a tmux session.
   recovery never happens. Without a `PermissionDenied` hook the icon
   stays on `auth`. The hook above maps `PermissionDenied` to `blocked` so
   it's clear the agent was stopped.
+- **`Notification` is intentionally unmapped.** Claude Code fires
+  `Notification` for permission prompts, idle prompts (60+ seconds
+  without input), auth events, and elicitation dialogs. The first is
+  already covered by `PermissionRequest`; the idle case would override
+  `done` with `question` shortly after a turn ends, making finished
+  agents look like they're asking something. The other cases never
+  needed a status change. Leaving `Notification` unmapped keeps `done`
+  sticky until the next prompt.
 
 ## Apply Changes
 
