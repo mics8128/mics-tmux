@@ -112,5 +112,17 @@ assert_eq "auth" \
   "$(printf '{"tool_name":"Bash"}' | claude_permission_request_status)" \
   "claude generic permission auth"
 
+assert_eq "https://example.com/abcdefghijklmnopqrstuvwxyz" \
+  "$(printf '%s\n' 'https://example.com/abcde' 'fghijklmnopqrstuvwxyz' | TMUX_PANE_WIDTH=25 MICS_TMUX_URL_PICKER_PRINT_ONLY=1 "$repo_dir/scripts/tmux-url-picker.sh")" \
+  "url picker joins wrapped URL"
+
+assert_eq "https://example.com/abcde" \
+  "$(printf '%s\n' 'note https://example.com/abcde' 'plain-followup' | TMUX_PANE_WIDTH=40 MICS_TMUX_URL_PICKER_PRINT_ONLY=1 "$repo_dir/scripts/tmux-url-picker.sh")" \
+  "url picker does not join unwrapped URL"
+
+assert_eq "https://example.com/abcde" \
+  "$(printf '%s\n' 'note https://example.com/abcde' 'https://second.example/path' | TMUX_PANE_WIDTH=40 MICS_TMUX_URL_PICKER_PRINT_ONLY=1 "$repo_dir/scripts/tmux-url-picker.sh" | tail -n 1)" \
+  "url picker keeps separate URLs"
+
 "$repo_dir/scripts/agent-status.sh" --help >/dev/null
 printf 'ok - agent-status help\n'
